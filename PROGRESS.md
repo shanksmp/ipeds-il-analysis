@@ -58,6 +58,41 @@ Last updated: 2026-09-24
 - Git hygiene: raw CSVs gitignored (each far exceeds GitHub's 100MB limit),
   feature-branch workflow (`feature/postgres-load` → PR #1 → merged into
   `main`, branch deleted, `main` set as the default branch on GitHub).
+- **SQL analysis layer** (`sql/analysis/`) — enrollment trends
+  (statewide + per-institution + class-level), completions trends
+  (statewide + per-institution + award-level + top programs), and
+  demographics (raw + 2010-comparable) views. Two more grain gotchas
+  found and verified empirically before writing any query:
+  `class_level=4` ("Other (total)") is a subtotal of codes 2+3, not a
+  fourth category, and only populated for degree-seeking students; and
+  completions' `majornum` is `NULL` for every row 1986–1999 (single-major
+  tracking only existed from 2000) — a naive `majornum=1` filter would
+  have zeroed out 14 years of data, fixed with
+  `COALESCE(majornum,1)=1`. Reconciliation checked: sum of
+  per-institution enrollment for 2020 exactly equals the statewide total
+  (233,777 = 233,777).
+- **Excel workbook** (`build_excel_workbook.py` → `ipeds_il_summary.xlsx`)
+  — 10 formatted data sheets (one per analysis view) plus a Read Me sheet
+  with methodology and caveats, plus 2 native line charts (statewide
+  enrollment, statewide completions). Regenerable from the live DB.
+- **README.md** — the ICCB-analyst-memo write-up, with real findings
+  pulled from the views: enrollment peaked in 2009 (383,960), down ~36%
+  to 246,931 by 2023; completions rose 132% over the same 1986–2023 span
+  (60,296 → 140,102) even as enrollment fell; demographic composition
+  shifted substantially (White share 71.3%→44.9%, Hispanic 9.3%→29.8%,
+  1990 vs. 2023); five institutions each lost more than half their
+  enrollment 2010–2023 (Wabash Valley -83.8%, Rend Lake -65.2%, John A.
+  Logan -58.0%, Kennedy-King -56.3%, Lake Land -55.1%). All caveats from
+  this file carried forward into it.
+- **Power BI path decided and documented** (`POWERBI_GUIDE.md`) — Power
+  BI Service (browser) can't reach local Postgres directly; that needs an
+  On-premises Data Gateway, which is Windows-only and can't run on this
+  Mac. Decided (with the user) to import `ipeds_il_summary.xlsx` directly
+  rather than stand up a separate cloud database. Wrote a page-by-page
+  build guide (which sheet/columns/chart type per page, plus a
+  cross-sheet relationship note for the enrollment-vs-completions combo
+  visual) — the actual report has to be built by hand in the Power BI
+  Service UI, which isn't something achievable from this CLI session.
 
 ## Known data caveats (carry into the final write-up, don't bury)
 
@@ -81,15 +116,14 @@ Last updated: 2026-09-24
 
 ## Not yet done
 
-1. **SQL analysis layer** — enrollment trends over time (statewide-scoped and
-   per-institution), completion/award trends, demographic composition shifts,
-   year-over-year % change. Build on `v_il_cc_enrollment` /
-   `v_il_cc_completions` joined to the `lookup_*` tables.
-2. **Power BI dashboard** (primary deliverable) — via Power BI Service
-   (browser), since Desktop isn't available on Mac. Star-schema-ready: scoped
-   views as fact tables, `lookup_*` as dimension tables for relationships.
-3. **Excel summary workbook** (secondary deliverable).
-4. **README / analyst write-up** — framed as an ICCB analyst memo: key
-   findings, trends, and explicit documentation of the caveats above (2010
-   category change, missing 2024 completions, the enrollment/completions
-   sector-scope issue found and fixed here, the undocumented `sex=4` code).
+1. **Build the actual Power BI report/dashboard** in the Power BI Service
+   UI, by hand, following `POWERBI_GUIDE.md` — upload
+   `ipeds_il_summary.xlsx`, build the 4-5 recommended pages. This is a
+   manual, browser-based step; nothing left to automate from this repo.
+2. **CIP code decoding** — `v_completions_top_programs` and the
+   `cipcode_6digit` column are still bare numeric codes, not program
+   names. IPEDS/NCES publish a CIP code dictionary separately; not
+   sourced yet (flagged rather than fabricated in `completions_trends.sql`).
+3. Optional polish: pin visuals to a Power BI dashboard view once the
+   report exists; consider a regional/urbanicity cut on the
+   institution-level enrollment declines noted in README.md.
