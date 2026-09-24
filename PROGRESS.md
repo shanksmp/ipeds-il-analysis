@@ -1,6 +1,6 @@
 # Progress — Illinois Community College Enrollment & Completion Analysis
 
-Last updated: 2026-09-22
+Last updated: 2026-09-24
 
 ## Done
 
@@ -56,7 +56,8 @@ Last updated: 2026-09-22
 - Deleted the redundant `.venv/` (missing `requests`, so it couldn't run the pull
   scripts at all; `venv/` has everything needed).
 - Git hygiene: raw CSVs gitignored (each far exceeds GitHub's 100MB limit),
-  feature-branch workflow (`feature/postgres-load`, not yet merged/PR'd to `main`).
+  feature-branch workflow (`feature/postgres-load` → PR #1 → merged into
+  `main`, branch deleted, `main` set as the default branch on GitHub).
 
 ## Known data caveats (carry into the final write-up, don't bury)
 
@@ -92,5 +93,3 @@ Last updated: 2026-09-22
    findings, trends, and explicit documentation of the caveats above (2010
    category change, missing 2024 completions, the enrollment/completions
    sector-scope issue found and fixed here, the undocumented `sex=4` code).
-5. **Open a PR** from `feature/postgres-load` into `main` — not done yet,
-   pending a decision on whether to keep adding to this branch or cut it here.
