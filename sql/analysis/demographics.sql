@@ -64,6 +64,10 @@ ORDER BY e.year, race_group_comparable;
 -- is NULL for all pre-2000 rows (only first-major tracking existed) and
 -- 1/2 (first/second major) from 2000 onward -- see completions_trends.sql
 -- for the full explanation.
+--
+-- cipcode_6digit=99 is ALSO a marginal "Total across all CIP programs"
+-- row (see completions_trends.sql grain note) and must be excluded here
+-- too, or every completions figure below doubles.
 DROP VIEW IF EXISTS v_completions_demographics_raw;
 CREATE VIEW v_completions_demographics_raw AS
 SELECT
@@ -77,6 +81,7 @@ JOIN lookup_race r ON r.code = c.race
 JOIN lookup_sex  s ON s.code = c.sex
 WHERE COALESCE(c.majornum, 1) = 1
   AND c.race <> 99 AND c.sex <> 99
+  AND c.cipcode_6digit <> 99
 GROUP BY c.year, r.label, s.label
 ORDER BY c.year, r.label, s.label;
 
@@ -93,5 +98,6 @@ FROM v_il_cc_completions c
 JOIN lookup_race r ON r.code = c.race
 WHERE COALESCE(c.majornum, 1) = 1
   AND c.sex = 99 AND c.race <> 99
+  AND c.cipcode_6digit <> 99
 GROUP BY c.year, race_group_comparable
 ORDER BY c.year, race_group_comparable;

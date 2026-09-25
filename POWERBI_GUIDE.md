@@ -79,13 +79,18 @@ Excel sheet's column headers exactly.
 - Repeat both visuals for completions using the **Completions Demog**
   sheets if page space allows, or as a second report page.
 
-### Page 5 (optional) — Completions by Program
-- Bar chart from **Completions by Award Level** or a custom visual
-  against `cipcode_6digit` from the underlying `v_completions_top_programs`
-  SQL view (not currently in the Excel export) — CIP codes aren't
-  decoded to program names yet; note this as a known gap if you build
-  this page rather than presenting bare numeric codes as if they were
-  self-explanatory.
+### Page 5 — Completions by Program
+- Horizontal bar chart from **Completions by Program**: Axis =
+  `cip_title` (filter/Top N to the top 15-20 by `total_completions` —
+  there are 683 programs total, too many to chart at once), Value =
+  `total_completions`. This surfaces the actual program mix (Liberal
+  Arts and Sciences, Nursing, Automotive Technology, etc. — see
+  README.md for the top-5 list) instead of bare numeric codes.
+- The `cip_edition` column shows which NCES CIP taxonomy edition
+  (1985/1990/2000/2010) supplied each title — worth a tooltip or a small
+  note if a reviewer asks why a niche program's title looks dated;
+  titles for codes retired before the current edition come from
+  whichever edition last defined them, per the caveat in README.md.
 
 ## 3. Formatting notes
 

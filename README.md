@@ -27,12 +27,21 @@ Chicago college — worth a follow-up cut by region/urbanicity rather than
 treating "community college enrollment" as one statewide trend.
 
 **Completions moved in the opposite direction.** Total awards conferred
-rose from 60,296 (1986) to 140,102 (2023) — up 132% — even as headcount
+rose from 30,148 (1986) to 70,051 (2023) — up 132% — even as headcount
 fell. Falling enrollment alongside rising completions points to improved
 throughput/completion rates per enrolled student, consistent with the
 kind of guided-pathways and completion-agenda work ICCB and its colleges
 have pursued; this analysis doesn't isolate the cause, but flags the
 counter-trend as the headline result worth investigating further.
+
+**The highest-volume completion programs are exactly what you'd expect
+from a community college mission**, and are now identifiable by name:
+Liberal Arts and Sciences/Liberal Studies (432,719 awards across the
+full period, by far the largest single program), Biological and
+Physical Sciences (191,968), Nursing Assistant/Aide and Patient Care
+Assistant (95,402), General Studies (55,304), and Nursing (RN/ASN/BSN
+tracks combined, tens of thousands more) — see the "Completions by
+Program" sheet in `ipeds_il_summary.xlsx` for the full ranked list.
 
 **The student population has diversified substantially.** Comparable
 demographic shares (merging pre/post-2010 category definitions — see
@@ -104,10 +113,31 @@ for completions.
   only meaningful for degree-seeking students. Completions'
   `majornum` field is `NULL` for every row before 2000 (single-major
   tracking only) and `1`/`2` (first/second major) from 2000 on — a naive
-  `majornum = 1` filter would silently zero out 1986–1999. Every
-  analysis view in `sql/analysis/` documents and correctly handles this;
-  see the comment headers in those files for the full reasoning and the
-  empirical checks that confirmed it.
+  `majornum = 1` filter would silently zero out 1986–1999. Completions'
+  `cipcode_6digit` field has the same problem as enrollment's `99`
+  codes: `cipcode_6digit=99` is a hidden "Total across all CIP programs"
+  marginal row, verified to reconcile exactly against the sum of every
+  real program code for the same institution/year. An earlier version of
+  this project's analysis views didn't exclude it, which exactly doubled
+  every completions figure (60,296 and 140,102 for 1986/2023, instead of
+  the correct 30,148/70,051) — caught during CIP program-code decoding
+  work, after the incorrect numbers had already been committed and
+  merged. Every analysis view in `sql/analysis/` now documents and
+  correctly handles all of this; see the comment headers in those files
+  for the full reasoning and the empirical checks that confirmed it.
+- **CIP program codes are now decoded to titles**
+  (`build_cip_lookup.py` → `sql/lookup_cip_code.sql`), sourced from
+  NCES's own CIP dictionaries across the 1985/1990/2000/2010 editions —
+  necessary, not optional, since the current (2010) edition alone covers
+  only 47.8% of actual award volume in this data (IPEDS completions
+  reporting has used four different CIP taxonomies across 1986–2023).
+  The current 2020 edition's file isn't fetchable without a JS-driven
+  download, so 2020–2023 rows fall back to the 2010-edition title,
+  correct for the large majority of codes since revisions mostly add new
+  codes rather than redefine existing ones. Each row in
+  `lookup_cip_code` records which edition actually supplied its title —
+  not verified row-by-row for the rarer case of a numeric code being
+  reassigned to a different program across editions.
 
 ## Repository structure
 
@@ -117,6 +147,8 @@ backfill_missing.py      -- targeted retry for specific year/dataset gaps
 load_to_postgres.py      -- loads the raw CSVs into Postgres (ipeds_il)
 build_code_lookups.py    -- generates sql/lookup_tables.sql from Urban Institute's
                              own API metadata (not hand-typed labels)
+build_cip_lookup.py      -- generates sql/lookup_cip_code.sql from NCES's own CIP
+                             dictionaries (1985/1990/2000/2010 editions)
 build_excel_workbook.py  -- generates ipeds_il_summary.xlsx from the analysis views
 inspect_data.py,
 check_institutions.py    -- diagnostic scripts (kept for reference; found the
@@ -125,10 +157,11 @@ check_institutions.py    -- diagnostic scripts (kept for reference; found the
 sql/
   schema.sql             -- the three fact tables (institutions, enrollment, completions)
   lookup_tables.sql       -- generated dimension tables decoding IPEDS category codes
+  lookup_cip_code.sql     -- generated CIP-6 program code -> title dictionary
   views.sql               -- v_il_cc_enrollment / v_il_cc_completions (sector-scoped)
   analysis/
     enrollment_trends.sql -- statewide + per-institution enrollment, YoY change
-    completions_trends.sql-- statewide + per-institution completions, by award level
+    completions_trends.sql-- statewide + per-institution completions, by award level/program
     demographics.sql      -- race/sex composition, raw and 2010-comparable
 
 ipeds_il_summary.xlsx    -- Excel deliverable: every analysis view as a formatted
@@ -146,6 +179,7 @@ PROGRESS.md               -- running project status log
 2. Create the `ipeds_il` Postgres database, then apply
    `sql/schema.sql` → `python3 load_to_postgres.py` →
    `python3 build_code_lookups.py` then `psql -d ipeds_il -f sql/lookup_tables.sql`
+   → `python3 build_cip_lookup.py` then `psql -d ipeds_il -f sql/lookup_cip_code.sql`
    → `psql -d ipeds_il -f sql/views.sql` → apply everything under
    `sql/analysis/`.
 3. `python3 build_excel_workbook.py` to regenerate the Excel deliverable.

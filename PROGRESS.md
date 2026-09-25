@@ -114,16 +114,44 @@ Last updated: 2026-09-24
   changed unitid over 38 years) — worth a line in the write-up as a small
   historical-analysis footnote.
 
+- **CIP code decoding** (`build_cip_lookup.py` → `sql/lookup_cip_code.sql`)
+  — `v_completions_top_programs` now shows real program titles
+  (Liberal Arts and Sciences, Nursing, Automotive Technology, etc.), not
+  bare numeric codes. Sourced from NCES's own CIP dictionaries across all
+  four editions that could apply to 1986–2023 (1985, 1990, 2000, 2010;
+  the 2020 edition's file isn't fetchable without a JS-driven download).
+  The 2010 edition alone covered only 47.8% of actual award volume in
+  this data — the older editions were necessary, not optional, since
+  IPEDS completions has used four different CIP taxonomies over the full
+  period. 2,703 unique codes covered; each carries a `cip_edition` column
+  recording which edition's title won.
+
+  **Found and fixed a real bug in already-merged work while building
+  this**: `cipcode_6digit=99` is a hidden "Total across all CIP programs"
+  marginal row — the same pattern as `race=99`/`sex=99` — verified to
+  reconcile exactly against the sum of every real program code for a
+  sample institution-year (2,016 = 2,016). Every completions view in
+  `sql/analysis/completions_trends.sql` and `demographics.sql` originally
+  summed across it without excluding it, exactly **doubling every
+  completions figure** in the merged PR #2: 1986 was reported as 60,296
+  (correct: 30,148), 2023 as 140,102 (correct: 70,051). The
+  year-over-year % change figures were coincidentally still correct
+  (the error was a constant 2x multiplier, so ratios between years were
+  unaffected), but every absolute total was wrong. Fixed in all four
+  affected views, re-verified with the same reconciliation-check
+  discipline as the enrollment fix (sum of per-institution completions
+  for 2020 now exactly equals the statewide total: 65,768 = 65,768),
+  Excel workbook regenerated, README numbers corrected.
+
 ## Not yet done
 
 1. **Build the actual Power BI report/dashboard** in the Power BI Service
    UI, by hand, following `POWERBI_GUIDE.md` — upload
-   `ipeds_il_summary.xlsx`, build the 4-5 recommended pages. This is a
+   `ipeds_il_summary.xlsx`, build the 4-5 recommended pages (now including
+   the "Completions by Program" sheet with real titles). This is a
    manual, browser-based step; nothing left to automate from this repo.
-2. **CIP code decoding** — `v_completions_top_programs` and the
-   `cipcode_6digit` column are still bare numeric codes, not program
-   names. IPEDS/NCES publish a CIP code dictionary separately; not
-   sourced yet (flagged rather than fabricated in `completions_trends.sql`).
-3. Optional polish: pin visuals to a Power BI dashboard view once the
+2. Optional polish: pin visuals to a Power BI dashboard view once the
    report exists; consider a regional/urbanicity cut on the
-   institution-level enrollment declines noted in README.md.
+   institution-level enrollment declines noted in README.md; source the
+   2020 CIP edition if exact 2020-2023 program titles ever matter enough
+   to justify scripting past its JS-driven download.
