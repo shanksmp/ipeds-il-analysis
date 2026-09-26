@@ -146,10 +146,20 @@ Last updated: 2026-09-24
 ## Not yet done
 
 1. **Build the actual Power BI report/dashboard** in the Power BI Service
-   UI, by hand, following `POWERBI_GUIDE.md` — upload
-   `ipeds_il_summary.xlsx`, build the 4-5 recommended pages (now including
-   the "Completions by Program" sheet with real titles). This is a
-   manual, browser-based step; nothing left to automate from this repo.
+   UI, by hand, following `POWERBI_GUIDE.md` — data is uploaded and
+   confirmed in Power BI as of this update. Guide now includes: a
+   validated colorblind-safe theme (`powerbi/theme.json`, import via
+   View > Themes before building anything else), a terminology note
+   (one report + 5 pages, optionally one pinned dashboard — not five
+   dashboards), KPI-card conditional formatting using the theme's
+   reserved good/bad colors, and a 10-point "what makes it look
+   designed" checklist. One real correction made to the guide itself:
+   the original Page 3 suggestion to overlay enrollment and completions
+   on a dual-axis combo chart was a genuine anti-pattern (two
+   independent y-scales invent an arbitrary visual correlation) —
+   replaced with indexing both series to a common base (=100 at the
+   first year) on one shared axis. This is a manual, browser-based
+   build; nothing left to automate from this repo.
 2. Optional polish: pin visuals to a Power BI dashboard view once the
    report exists; consider a regional/urbanicity cut on the
    institution-level enrollment declines noted in README.md; source the

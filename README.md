@@ -166,8 +166,10 @@ sql/
 
 ipeds_il_summary.xlsx    -- Excel deliverable: every analysis view as a formatted
                              sheet, plus a Read Me sheet with methodology/caveats
+powerbi/theme.json        -- validated, colorblind-safe Power BI theme (import via
+                             View > Themes > Browse for themes)
 POWERBI_GUIDE.md          -- how to build the Power BI Service dashboard from
-                             ipeds_il_summary.xlsx
+                             ipeds_il_summary.xlsx, including the theme above
 PROGRESS.md               -- running project status log
 ```
 
